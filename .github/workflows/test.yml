@@ -1,36 +1,52 @@
-build_single_target:
-  runs-on: ubuntu-latest
-  steps:
-    - uses: actions/checkout@v4
-    
-    - name: Install dependencies
-      run: sudo apt-get update && sudo apt-get -y install ninja-build
-      
-    - name: Setup environment
-      env:
-        ACTIONS_ALLOW_UNSECURE_COMMANDS: true
-      run: |
-        COMMIT_ID=${{ github.event.pull_request.head.sha }}
-        COMMIT_ID=${COMMIT_ID:-${{ github.sha }}}
-        BUILD_SUFFIX=ci-$(date '+%Y%m%d')-$(git rev-parse --short ${COMMIT_ID})
-        VERSION=$(grep project CMakeLists.txt|awk -F VERSION '{ gsub(/[ \t)]/, "", $2); print $2 }')
-        echo "BUILD_SUFFIX=${BUILD_SUFFIX}" >> $GITHUB_ENV
-        echo "BUILD_NAME=inav-${VERSION}-${BUILD_SUFFIX}" >> $GITHUB_ENV
-        echo "NUM_CORES=$(grep processor /proc/cpuinfo  | wc -l)" >> $GITHUB_ENV
+name: test Build firmware single
+# Don't enable CI on push, just on PR. If you
+# are working on the main repo and want to trigger
+# a CI build submit a draft PR.
+on: 
+  workflow_dispatch:
+
+  workflow_call:
+    #inputs:
+    #  release_build:
+    #   description: 'Specifies if it is a build that should include commit hash in hex file names or not'
+    #   default: false
+    #   required: false
+    #   type: boolean
+
+
+jobs:
+    build_single_target:
+    runs-on: ubuntu-latest
+    steps:
+        - uses: actions/checkout@v4
         
-    - name: Build specific target
-      run: |
-        mkdir -p build && cd build && 
-        cmake \
-          -DWARNINGS_AS_ERRORS=ON \
-          -DTARGET=NEUTRONRCF435MINI \  # 替换为你的目标飞控板
-          -DBUILD_SUFFIX=${{ env.BUILD_SUFFIX }} \
-          -DMAIN_COMPILE_OPTIONS=-pipe \
-          -G Ninja .. && 
-        ninja -j${{ env.NUM_CORES }} inav_firmware
-        
-    - name: Upload firmware
-      uses: actions/upload-artifact@v4
-      with:
-        name: ${{ env.BUILD_NAME }}
-        path: build/*.hex
+        - name: Install dependencies
+          run: sudo apt-get update && sudo apt-get -y install ninja-build
+        - name: Setup environment
+        env:
+            ACTIONS_ALLOW_UNSECURE_COMMANDS: true
+        run: |
+            COMMIT_ID=${{ github.event.pull_request.head.sha }}
+            COMMIT_ID=${COMMIT_ID:-${{ github.sha }}}
+            BUILD_SUFFIX=ci-$(date '+%Y%m%d')-$(git rev-parse --short ${COMMIT_ID})
+            VERSION=$(grep project CMakeLists.txt|awk -F VERSION '{ gsub(/[ \t)]/, "", $2); print $2 }')
+            echo "BUILD_SUFFIX=${BUILD_SUFFIX}" >> $GITHUB_ENV
+            echo "BUILD_NAME=inav-${VERSION}-${BUILD_SUFFIX}" >> $GITHUB_ENV
+            echo "NUM_CORES=$(grep processor /proc/cpuinfo  | wc -l)" >> $GITHUB_ENV
+                
+        - name: Build specific target
+        run: |
+            mkdir -p build && cd build && 
+            cmake \
+            -DWARNINGS_AS_ERRORS=ON \
+            -DTARGET=NEUTRONRCF435MINI \  # 替换为你的目标飞控板
+            -DBUILD_SUFFIX=${{ env.BUILD_SUFFIX }} \
+            -DMAIN_COMPILE_OPTIONS=-pipe \
+            -G Ninja .. && 
+            ninja -j${{ env.NUM_CORES }} inav_firmware
+            
+        - name: Upload firmware
+        uses: actions/upload-artifact@v4
+        with:
+            name: ${{ env.BUILD_NAME }}
+            path: build/*.hex
