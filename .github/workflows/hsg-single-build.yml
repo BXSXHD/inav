@@ -48,7 +48,7 @@ jobs:
           key: ${{ runner.os }}-downloads-${{ hashFiles('CMakeLists.txt') }}-${{ hashFiles('**/cmake/*')}}
       - name: Build targets (${{ matrix.id }})
         # run: mkdir -p build && cd build && cmake -DTARGET=MATEKF405 -DWARNINGS_AS_ERRORS=ON -DCI_JOB_INDEX=${{ matrix.id }} -DCI_JOB_COUNT=${{ strategy.job-total }} -DBUILD_SUFFIX=${{ env.BUILD_SUFFIX }} -DMAIN_COMPILE_OPTIONS=-pipe -G Ninja .. && ninja -j${{ env.NUM_CORES }} ci
-        run: mkdir -p build && cd build && cmake -DWARNINGS_AS_ERRORS=ON -DTARGET=MATEKF405 -DBUILD_SUFFIX=${{ env.BUILD_SUFFIX }} -DMAIN_COMPILE_OPTIONS=-pipe -G Ninja .. && ninja -j${{ env.NUM_CORES }} ci
+        run: mkdir -p build && cd build && cmake -DWARNINGS_AS_ERRORS=ON -DTARGET=NEUTRONRCF435MINI -DBUILD_SUFFIX=${{ env.BUILD_SUFFIX }} -DMAIN_COMPILE_OPTIONS=-pipe -G Ninja .. && ninja -j${{ env.NUM_CORES }} ci
       - name: Upload artifacts
         uses: actions/upload-artifact@v4
         with:
